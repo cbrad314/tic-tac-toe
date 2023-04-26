@@ -3,9 +3,9 @@
 const gameBoard = (() => {
   const rows = 3;
   const columns = 3;
-  const board = [];
 
   const createBoard = () => {
+    const board = [];
     for (let i = 0; i < rows; i++) {
       board[i] = [];
       for (let j = 0; j < columns; j++) {
@@ -14,7 +14,7 @@ const gameBoard = (() => {
     }
     return board;
   };
-
+  const clearBoard = () => (board.length = 0);
   return { createBoard };
 })();
 
@@ -60,20 +60,22 @@ const displayController = (() => {
       boardDiv.appendChild(newRow);
     });
   };
-
-  return { drawBoard };
+  const clearBoard = () => {
+    boardDiv.innerHTML = "";
+  };
+  return { drawBoard, clearBoard };
 })();
 
 const gameController = (() => {
   const Player = (mark) => {
     const getMark = () => mark;
-
     return { getMark };
   };
 
   let currentPlayer;
   let playerOne;
   let playerTwo;
+  const gameOutcome = document.getElementById("game-outcome-message");
 
   const initializeGame = () => {
     playerOne = Player("X");
@@ -86,7 +88,7 @@ const gameController = (() => {
       const mark = currentPlayer.getMark();
       e.target.textContent = mark;
       e.target.dataset.value = mark;
-      checkGameStatus(mark, e.target);
+      _checkGameStatus(mark, e.target);
       _switchPlayer();
     }
   };
@@ -96,7 +98,7 @@ const gameController = (() => {
       : (currentPlayer = playerOne);
   };
 
-  const checkGameStatus = (mark, selectedCell) => {
+  const _checkGameStatus = (mark, selectedCell) => {
     const row = selectedCell.dataset.row;
     const column = selectedCell.dataset.col;
     const cellsData = getCellsData();
@@ -124,6 +126,7 @@ const gameController = (() => {
     }
     if (gameStatus) {
       _disableCells();
+      gameOutcome.textContent = _declareGameOutcome(gameStatus);
     }
   };
 
@@ -190,6 +193,17 @@ const gameController = (() => {
     cell.classList.add("btn-success");
   };
 
+  const _declareGameOutcome = (gameStatus) => {
+    if (gameStatus === "tie") {
+      return "Tie Game";
+    } else {
+      return `${gameStatus} won the game!`;
+    }
+  };
+
+  const _clearGameOutcome = () => {
+    gameOutcome.innerHTML = "";
+  };
   const _getWinningCells = (winType, val = null) => {
     const cells = document.querySelectorAll(".cell");
     if (winType === "row" || winType === "col") {
@@ -219,6 +233,17 @@ const gameController = (() => {
       });
     }
   };
+
+  const restartButton = document.querySelector("#restart");
+
+  const _restartGame = () => {
+    displayController.clearBoard();
+    displayController.drawBoard();
+    gameController.initializeGame();
+    _clearGameOutcome();
+  };
+
+  restartButton.addEventListener("click", _restartGame);
 
   return {
     addMarkToCell,
